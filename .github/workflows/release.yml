@@ -38,3 +38,4 @@ jobs:
           version: ${{ github.event.inputs.tag }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           files: out/Mp3Extractor.exe
+
