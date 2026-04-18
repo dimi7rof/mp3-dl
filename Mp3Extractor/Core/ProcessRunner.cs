@@ -37,4 +37,44 @@ public static class ProcessRunner
             PrintLine($"Error: {file} exited with code {process.ExitCode}", ConsoleColor.Red);
         }
     }
+
+    public static async Task<int> RunAsync(string file, string args, Action<string>? onOutput = null)
+    {
+        var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = file,
+                Arguments = args,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            }
+        };
+
+        process.OutputDataReceived += (sender, args) => 
+        {
+            if (!string.IsNullOrEmpty(args.Data))
+            {
+                onOutput?.Invoke(args.Data);
+            }
+        };
+
+        process.ErrorDataReceived += (sender, args) => 
+        {
+            if (!string.IsNullOrEmpty(args.Data))
+            {
+                onOutput?.Invoke($"ERROR: {args.Data}");
+            }
+        };
+
+        process.Start();
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+
+        await process.WaitForExitAsync();
+
+        return process.ExitCode;
+    }
 }

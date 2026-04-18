@@ -1,0 +1,163 @@
+<Window x:Class="Mp3Extractor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Mp3Extractor"
+        xmlns:conv="clr-namespace:Mp3Extractor.Converters"
+        mc:Ignorable="d"
+        Title="MP3 Downloader" Height="700" Width="900" 
+        Background="{StaticResource BackgroundBrush}"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <conv:BooleanNegationConverter x:Key="NotConverter" />
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Grid.Row="0" Background="{StaticResource SurfaceBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Margin="24,20" VerticalAlignment="Center">
+                <TextBlock FontSize="24" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}">
+                    MP3 Downloader
+                </TextBlock>
+                <TextBlock FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,4,0,0">
+                    Download audio from YouTube and other platforms
+                </TextBlock>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Margin="24,20" VerticalAlignment="Center">
+                <TextBlock Foreground="{StaticResource TextSecondaryBrush}" FontSize="12">
+                    <Run Text="Status: " />
+                    <Run Text="{Binding Status, Mode=OneWay}" Foreground="{StaticResource AccentBrush}" />
+                </TextBlock>
+            </StackPanel>
+        </Grid>
+
+        <!-- Main Content -->
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Margin="24">
+                <!-- Output Directory Section -->
+                <StackPanel Margin="0,0,0,20">
+                    <TextBlock Style="{StaticResource ModernLabelStyle}" Margin="0,0,0,8">
+                        Output Directory
+                    </TextBlock>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" 
+                                 Style="{StaticResource ModernTextBoxStyle}"
+                                 Text="{Binding OutputDirectory, UpdateSourceTrigger=PropertyChanged}"
+                                 IsEnabled="{Binding IsProcessing, Converter={StaticResource NotConverter}}" />
+                        <Button Grid.Column="1" 
+                                Command="{Binding BrowseCommand}"
+                                Style="{StaticResource ModernButtonStyle}"
+                                Content="Browse" 
+                                Margin="8,0,0,0"
+                                IsEnabled="{Binding IsProcessing, Converter={StaticResource NotConverter}}" />
+                    </Grid>
+                </StackPanel>
+
+                <!-- URL Section -->
+                <StackPanel Margin="0,0,0,20">
+                    <TextBlock Style="{StaticResource ModernLabelStyle}" Margin="0,0,0,8">
+                        Video URL
+                    </TextBlock>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0"
+                                 Style="{StaticResource ModernTextBoxStyle}"
+                                 Text="{Binding Url, UpdateSourceTrigger=PropertyChanged}"
+                                 Foreground="{StaticResource TextPrimaryBrush}"
+                                 IsEnabled="{Binding IsProcessing, Converter={StaticResource NotConverter}}" />
+                        <Button Grid.Column="1"
+                                Command="{Binding PasteCommand}"
+                                Style="{StaticResource ModernButtonStyle}"
+                                Content="Paste"
+                                Margin="8,0,0,0"
+                                IsEnabled="{Binding IsProcessing, Converter={StaticResource NotConverter}}" />
+                    </Grid>
+                </StackPanel>
+
+                <!-- Title Section -->
+                <StackPanel Margin="0,0,0,20">
+                    <TextBlock Style="{StaticResource ModernLabelStyle}" Margin="0,0,0,8">
+                        Track Title
+                    </TextBlock>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" 
+                                 Style="{StaticResource ModernTextBoxStyle}"
+                                 Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
+                                 IsEnabled="False" />
+                        <Button Grid.Column="1" 
+                                Command="{Binding GetTitleCommand}"
+                                Style="{StaticResource ModernButtonStyle}"
+                                Content="Fetch Title" 
+                                Margin="8,0,0,0" />
+                    </Grid>
+                    <TextBlock Style="{StaticResource ModernTextBlockStyle}" 
+                               Margin="0,8,0,0" 
+                               Foreground="{StaticResource TextSecondaryBrush}" 
+                               FontSize="11" 
+                               TextWrapping="Wrap">
+                        Leave empty to auto-detect from URL, or enter a custom name for the file
+                    </TextBlock>
+                </StackPanel>
+
+                <!-- Action Buttons -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,20" Height="40">
+                    <Button Command="{Binding DownloadCommand}"
+                            Style="{StaticResource ModernButtonStyle}"
+                            Content="Download MP3"
+                            FontSize="14"
+                            Padding="20,10"
+                            Margin="0,0,10,0"
+                            IsEnabled="{Binding IsProcessing, Converter={StaticResource NotConverter}}" />
+                    <Button Command="{Binding ClearLogCommand}"
+                            Style="{StaticResource ModernButtonStyle}"
+                            Background="#64748B"
+                            Content="Clear Log"
+                            IsEnabled="{Binding IsProcessing, Converter={StaticResource NotConverter}}" />
+                </StackPanel>
+
+                <!-- Progress Log Section -->
+                <StackPanel Margin="0,0,0,0">
+                    <TextBlock Style="{StaticResource ModernLabelStyle}" Margin="0,0,0,8">
+                        Progress Log
+                    </TextBlock>
+                    <TextBox Style="{StaticResource ModernTextBoxStyle}"
+                             Text="{Binding ProgressLog, Mode=OneWay}"
+                             IsReadOnly="True"
+                             Height="200"
+                             VerticalAlignment="Top"
+                             VerticalScrollBarVisibility="Auto"
+                             TextWrapping="Wrap" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer -->
+        <Grid Grid.Row="2" Background="{StaticResource SurfaceBrush}">
+            <TextBlock Margin="24,12" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11">
+                Powered by yt-dlp and FFmpeg
+            </TextBlock>
+        </Grid>
+    </Grid>
+</Window>

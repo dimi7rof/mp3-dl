@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: Checkout
@@ -20,8 +20,14 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Publish self-contained
-        run: dotnet publish ./Mp3Extractor/Mp3Extractor.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o out
+      - name: Restore dependencies
+        run: dotnet restore ./Mp3Extractor/Mp3Extractor.csproj
+
+      - name: Build Release
+        run: dotnet build ./Mp3Extractor/Mp3Extractor.csproj -c Release --no-restore
+
+      - name: Publish single-file executable
+        run: dotnet publish ./Mp3Extractor/Mp3Extractor.csproj -c Release -o ./publish -p:Version=${{ github.event.inputs.tag }}
 
       - name: Create Git tag
         run: |
@@ -30,12 +36,32 @@ jobs:
           git tag ${{ github.event.inputs.tag }}
           git push origin ${{ github.event.inputs.tag }}
 
-      - name: Create Release
+      - name: Create GitHub Release
         id: create_release
-        uses: dimi7rof/create-release@v3
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: Release ${{ github.event.inputs.tag }}
-          version: ${{ github.event.inputs.tag }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          files: out/Mp3Extractor.exe
+          tag_name: ${{ github.event.inputs.tag }}
+          release_name: Release ${{ github.event.inputs.tag }}
+          body: |
+            ## MP3 Extractor Release            
+            **Version**: ${{ github.event.inputs.tag }}
+          draft: false
+          prerelease: false
 
+      - name: Upload Executable
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./publish/Mp3Extractor.exe
+          asset_name: Mp3Extractor-${{ github.event.inputs.tag }}.exe
+          asset_content_type: application/octet-stream
+
+      - name: Print Success
+        run: |
+          Write-Host "? Build and Release completed successfully!" -ForegroundColor Green
+          Write-Host "Release: ${{ github.event.inputs.tag }}" -ForegroundColor Cyan
+          Write-Host "Executable: Mp3Extractor-${{ github.event.inputs.tag }}.exe" -ForegroundColor Yellow
