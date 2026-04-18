@@ -1,5 +1,4 @@
-﻿// Program.cs
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -7,33 +6,51 @@ class Program
 {
     static async Task Main(string[] args)
     {
+        Print("Enter output directory: ", ConsoleColor.Magenta);
+
+        var outputDir = Console.ReadLine() ?? Path.Combine("E:", "mp3");
+        if (!Directory.Exists(outputDir))
+        {
+            PrintLine($"Directory '{outputDir}' does not exist. Creating it...");
+            Directory.CreateDirectory(outputDir);
+        }
+
         while (true)
         {
-            Console.Write("Enter url: ");
-            var url = Console.ReadLine();
-            url = url!.Split("&list=").FirstOrDefault();
+            try
+            {
+                Print("Enter url: ", ConsoleColor.Magenta);
+                var url = Console.ReadLine();
+                url = url!.Split("&list=").FirstOrDefault();
 
-            var mp3dir = Path.Combine("E:", "mp3");
-            var tools = Path.Combine("E:", "Tools");
-            var ytdlp = Path.Combine(tools, "yt-dlp.exe");
-            var ffmpeg = Path.Combine(tools, "ffmpeg.exe");
+                var tools = Path.Combine("E:", "Tools");
+                var ytdlp = Path.Combine(tools, "yt-dlp.exe");
+                var ffmpeg = Path.Combine(tools, "ffmpeg.exe");
 
-            var title = await GetTitleAsync(url!);
+                var title = await GetTitleAsync(url!);
 
-            var safeTitle = string.Concat(title!.Split(Path.GetInvalidFileNameChars()));
+                var safeTitle = string.Concat(title!.Split(Path.GetInvalidFileNameChars()));
 
-            var latinTitle = CyrillicToLatin(safeTitle);
+                var latinTitle = CyrillicToLatin(safeTitle);
 
-            var outputPath = Path.Combine(mp3dir, $"{latinTitle}.mp3");
+                var outputPath = Path.Combine(outputDir, $"{latinTitle}.mp3");
 
-            RunProcess(ytdlp,
-                $"--ffmpeg-location \"{ffmpeg}\" " +
-                "-x --audio-format mp3 " +
-                $"-o \"{outputPath}\" {url}");
+                Print($"{latinTitle}.mp3", ConsoleColor.Yellow);
 
-            Console.WriteLine($"{latinTitle}.mp3: Downloaded!");
+                RunProcess(ytdlp,
+                    $"--ffmpeg-location \"{ffmpeg}\" " +
+                    "-x --audio-format mp3 " +
+                    $"-o \"{outputPath}\" {url}");
+
+                PrintLine(" Downloaded!", ConsoleColor.Green);
+            }
+            catch (Exception ex)
+            {
+                PrintLine(ex.Message, ConsoleColor.Red);
+            }
         }
     }
+
     static string CyrillicToLatin(string text)
     {
         if (string.IsNullOrEmpty(text))
@@ -119,13 +136,34 @@ class Program
         return result.ToString();
     }
 
+    static void Print(string text, ConsoleColor? color = null)
+    {
+        if (color.HasValue)
+            Console.ForegroundColor = color.Value;
+
+        Console.Write(text);
+
+        if (color.HasValue)
+            Console.ResetColor();
+    }
+
+    static void PrintLine(string text, ConsoleColor? color = null)
+    {
+        if (color.HasValue)
+            Console.ForegroundColor = color.Value;
+
+        Console.WriteLine(text);
+
+        if (color.HasValue)
+            Console.ResetColor();
+    }
+
     static async Task<string?> GetTitleAsync(string url)
     {
         using var http = new HttpClient();
 
         // Some sites (like YouTube) require a User-Agent
-        http.DefaultRequestHeaders.UserAgent.ParseAdd(
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+        http.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
 
         var html = await http.GetStringAsync(url);
 
@@ -164,7 +202,7 @@ class Program
 
         if (process.ExitCode != 0)
         {
-            Console.WriteLine($"{fileName} failed with exit code {process.ExitCode}");
+            PrintLine($"Error: {fileName} exited with code {process.ExitCode}", ConsoleColor.Red);
         }
     }
 }
