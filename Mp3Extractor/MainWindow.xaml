@@ -92,48 +92,24 @@
                     </Grid>
                 </StackPanel>
 
-                <!-- Title Section -->
-                <StackPanel Margin="0,0,0,20">
-                    <TextBlock Style="{StaticResource ModernLabelStyle}" Margin="0,0,0,8">
-                        Track Title
-                    </TextBlock>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBox Grid.Column="0" 
-                                 Style="{StaticResource ModernTextBoxStyle}"
-                                 Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
-                                 IsEnabled="False" />
-                        <Button Grid.Column="1" 
-                                Command="{Binding GetTitleCommand}"
-                                Style="{StaticResource ModernButtonStyle}"
-                                Content="Fetch Title" 
-                                Margin="8,0,0,0" />
-                    </Grid>
-                    <TextBlock Style="{StaticResource ModernTextBlockStyle}" 
-                               Margin="0,8,0,0" 
-                               Foreground="{StaticResource TextSecondaryBrush}" 
-                               FontSize="11" 
-                               TextWrapping="Wrap">
-                        Leave empty to auto-detect from URL, or enter a custom name for the file
-                    </TextBlock>
-                </StackPanel>
 
                 <!-- Action Buttons -->
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,20" Height="40">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,20" Height="50">
                     <Button Command="{Binding DownloadCommand}"
                             Style="{StaticResource ModernButtonStyle}"
-                            Content="Download MP3"
-                            FontSize="14"
-                            Padding="20,10"
-                            Margin="0,0,10,0"
+                            Content="Download"
+                            FontSize="16"
+                            FontWeight="Bold"
+                            Padding="30,15"
+                            Margin="200,0,200,0"
                             IsEnabled="{Binding IsProcessing, Converter={StaticResource NotConverter}}" />
+                    <TextBlock />
                     <Button Command="{Binding ClearLogCommand}"
                             Style="{StaticResource ModernButtonStyle}"
                             Background="#64748B"
                             Content="Clear Log"
+                            HorizontalAlignment="Right"
+                            Margin="200,0,0,0"
                             IsEnabled="{Binding IsProcessing, Converter={StaticResource NotConverter}}" />
                 </StackPanel>
 
@@ -142,7 +118,8 @@
                     <TextBlock Style="{StaticResource ModernLabelStyle}" Margin="0,0,0,8">
                         Progress Log
                     </TextBlock>
-                    <TextBox Style="{StaticResource ModernTextBoxStyle}"
+                    <TextBox x:Name="LogTextBox"
+                             Style="{StaticResource ModernTextBoxStyle}"
                              Text="{Binding ProgressLog, Mode=OneWay}"
                              IsReadOnly="True"
                              Height="200"

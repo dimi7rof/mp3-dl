@@ -171,46 +171,18 @@ public class MainWindowViewModel : NotifyPropertyChangedBase
         {
             IsProcessing = true;
             
-            var url = Url.Split("&list=").FirstOrDefault() ?? Url;
-            var title = string.IsNullOrWhiteSpace(Title) ? await TitleService.GetTitleAsync(url) : Title;
+            var url = Url;
+            var isPlaylist = url.Contains("list=");
 
-            if (string.IsNullOrEmpty(title))
+            if (isPlaylist)
             {
-                Status = "Could not determine title for download";
-                AddLog("ERROR: Could not determine title");
-                return;
-            }
-
-            Title = title;
-            var outputPath = Path.Combine(OutputDirectory, $"{title}.mp3");
-
-            // Check if MP3 file already exists
-            if (File.Exists(outputPath))
-            {
-                Status = "File already exists!";
-                AddLog($"File already exists: {title}.mp3");
-                Url = "";
-                Title = "";
-                return;
-            }
-
-            Status = "Downloading...";
-            AddLog($"Starting download: {title}.mp3");
-
-            var args = $"--ffmpeg-location \"{_tools.ToolsDir}\" -x --audio-format mp3 -o \"{outputPath}\" {url}";
-            var exitCode = await ProcessRunner.RunAsync(_tools.YtDlpPath, args, AddLog);
-
-            if (exitCode == 0)
-            {
-                Status = "Download completed successfully!";
-                AddLog($"SUCCESS: {title}.mp3 downloaded!");
-                Url = "";
-                Title = "";
+                // Download entire playlist
+                await DownloadPlaylistAsync(url);
             }
             else
             {
-                Status = $"Download failed with exit code {exitCode}";
-                AddLog($"ERROR: Download failed with exit code {exitCode}");
+                // Download single video
+                await DownloadSingleAsync(url);
             }
         }
         catch (Exception ex)
@@ -221,6 +193,75 @@ public class MainWindowViewModel : NotifyPropertyChangedBase
         finally
         {
             IsProcessing = false;
+        }
+    }
+
+    private async Task DownloadSingleAsync(string url)
+    {
+        var title = string.IsNullOrWhiteSpace(Title) ? await TitleService.GetTitleAsync(url) : Title;
+
+        if (string.IsNullOrEmpty(title))
+        {
+            Status = "Could not determine title for download";
+            AddLog("ERROR: Could not determine title");
+            return;
+        }
+
+        Title = title;
+        var outputPath = Path.Combine(OutputDirectory, $"{title}.mp3");
+
+        // Check if MP3 file already exists
+        if (File.Exists(outputPath))
+        {
+            Status = "File already exists!";
+            AddLog($"File already exists: {title}.mp3");
+            Url = "";
+            Title = "";
+            return;
+        }
+
+        Status = "Downloading...";
+        AddLog($"Starting download: {title}.mp3");
+
+        var args = $"--ffmpeg-location \"{_tools.ToolsDir}\" -x --audio-format mp3 -o \"{outputPath}\" {url}";
+        var exitCode = await ProcessRunner.RunAsync(_tools.YtDlpPath, args, AddLog);
+
+        if (exitCode == 0)
+        {
+            Status = "Download completed successfully!";
+            AddLog($"SUCCESS: {title}.mp3 downloaded!");
+            Url = "";
+            Title = "";
+        }
+        else
+        {
+            Status = $"Download failed with exit code {exitCode}";
+            AddLog($"ERROR: Download failed with exit code {exitCode}");
+        }
+    }
+
+    private async Task DownloadPlaylistAsync(string playlistUrl)
+    {
+        Status = "Downloading playlist...";
+        AddLog($"Detected playlist: {playlistUrl}");
+        AddLog("Starting playlist download...");
+
+        var outputPathTemplate = Path.Combine(OutputDirectory, "%(title)s.mp3");
+        var args = $"--ffmpeg-location \"{_tools.ToolsDir}\" -x --audio-format mp3 -o \"{outputPathTemplate}\" {playlistUrl}";
+
+        var exitCode = await ProcessRunner.RunAsync(_tools.YtDlpPath, args, AddLog);
+
+        if (exitCode == 0)
+        {
+            Status = "Playlist download completed successfully!";
+            AddLog("SUCCESS: Playlist downloaded!");
+            Url = "";
+            Title = "";
+        }
+        else
+        {
+            Status = $"Playlist download failed with exit code {exitCode}";
+            AddLog($"ERROR: Playlist download failed with exit code {exitCode}");
         }
     }
 
